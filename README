@@ -15,17 +15,17 @@ runstaq dir1 dir2...dirN
 
 or
 
-runstaq -stckfile runstaqfile (which is just a list of folders, one per line)
+runstaq -stack runstaqfile (which is just a list of folders, one per line)
 
 This will drop you into a shell where you can:
 
-start [foldername]  # Run the stack or if foldername is specified just run
+run [foldername]  # Run the stack or if foldername is specified just run
                       that piece of the stack
 
-start [foldername]  # Stop the stack or if foldername is specified just stop
+shutdown [foldername]  # Stop the stack or if foldername is specified just stop
                       that piece of the stack
 
-status [foldername] # The status of the stack or if foldername is specified just 
+list [foldername] # The status of the stack or if foldername is specified just 
                       display the status for that piece of the stack
 
 quit                # stop the stack and exit
