@@ -40,8 +40,7 @@ Notes/Future Features
   - run a boot.sh script before starting (bring up infrastructure,
     prime caches, etc)
   - Default stack to run (default.staq?)
-  - Embed forego (but need to packagize forego)
-  - Support for env files (forego already does this)
+  - Support for env files
     
   
 
