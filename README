@@ -1,0 +1,48 @@
+
+Runstaq takes a list of directories and provides an interactive shell
+for starting and stopping program(s) within them (using foreman style
+Procfiles).
+
+Note:  It's not a devops tool per se, just a way to run a pieces.
+
+Is you app comprised of a number of components spread across multiple
+folders/repos?  runstaq will help you get them running locally for
+dev/testing.
+
+Usage:
+
+runstaq dir1 dir2...dirN
+
+or
+
+runstaq -stckfile runstaqfile (which is just a list of folders, one per line)
+
+This will drop you into a shell where you can:
+
+start [foldername]  # Run the stack or if foldername is specified just run
+                      that piece of the stack
+
+start [foldername]  # Stop the stack or if foldername is specified just stop
+                      that piece of the stack
+
+status [foldername] # The status of the stack or if foldername is specified just 
+                      display the status for that piece of the stack
+
+quit                # stop the stack and exit
+
+help                # Print this list
+
+version             # Print version/build info for runstaq
+
+
+Notes/Future Features
+
+  - run a boot.sh script before starting (bring up infrastructure,
+    prime caches, etc)
+  - Default stack to run (default.staq?)
+  - Embed forego (but need to packagize forego)
+  - Support for env files (forego already does this)
+    
+  
+
+  
