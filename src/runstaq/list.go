@@ -12,13 +12,11 @@ func listCmd() *ishell.Cmd {
 		Func: func(c *ishell.Context) {
 
 			if len(c.Args) == 0 {
-				c.Printf("Modules:\n\n")
-
 				for _, procfile := range AppStaq.Procfiles {
 					c.Printf("%-15s %s\n", procfile.Name, procfile.Status())
 
 					for _, proc := range procfile.Procs {
-						c.Printf("%10s %s (%s)\n", proc.Name, proc.Command, proc.Status())
+						c.Printf("%10s %s\n", proc.Name, proc.Status())
 					}
 
 					c.Printf("\n")
@@ -29,7 +27,7 @@ func listCmd() *ishell.Cmd {
 				if procfile != nil {
 					c.Printf("%-15s %s\n", procfile.Name, procfile.Status())
 					for _, proc := range procfile.Procs {
-						c.Printf("%10s %s (%s)\n", proc.Name, proc.Command, proc.Status())
+						c.Printf("%10s %s\n", proc.Name, proc.Status())
 					}
 				} else {
 					c.Printf("No such module: %s\n", c.Args[0])

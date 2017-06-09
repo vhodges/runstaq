@@ -32,3 +32,10 @@ func (staq *Staq) module(name string) *Procfile {
 
 	return p
 }
+
+func (staq *Staq) shutdown() {
+	staq.shell.Printf("Shutting down...\n")
+	for _, procfile := range AppStaq.Procfiles {
+		procfile.Stop()
+	}
+}

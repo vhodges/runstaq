@@ -57,6 +57,8 @@ func main() {
 
 	// run shell
 	shell.Run()
+
+	AppStaq.shutdown()
 }
 
 func readStaqFile(modules []string, filename string) []string {

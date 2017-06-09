@@ -3,20 +3,26 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/abiosoft/ishell"
 )
 
 type Procfile struct {
-	Name    string
-	Path    string
-	Procs   []*Proc
-	Error   error
-	Running bool
-	shell   *ishell.Shell
+	Name  string
+	Path  string
+	Procs []*Proc
+	Error error
+
+	Stdout io.Writer
+	Stderr io.Writer
+
+	shell *ishell.Shell
+	wg    sync.WaitGroup
 }
 
 /*
@@ -24,15 +30,22 @@ web: bundle exec thin start
 job: bundle exec rake jobs:work
 */
 
+// TODO Clean this up
 func NewProcfile(path string, shell *ishell.Shell) *Procfile {
 
 	name := filepath.Base(path)
 
 	procfile := &Procfile{Path: path, Name: name, shell: shell}
 
-	file, err := os.Open(filepath.Join(path, "Procfile"))
+	var err error
+	var stdout *os.File
+	var stderr *os.File
+	var file *os.File
+
+	file, err = os.Open(filepath.Join(path, "Procfile"))
 	if err != nil {
 		procfile.Error = err
+		shell.Println(err)
 		return procfile
 	}
 
@@ -45,9 +58,28 @@ func NewProcfile(path string, shell *ishell.Shell) *Procfile {
 		procfile.Procs = append(procfile.Procs, &Proc{Name: words[0], Command: words[1], shell: shell})
 	}
 
-	if err := scanner.Err(); err != nil {
+	err = scanner.Err()
+	if err != nil {
 		procfile.Error = err
+		shell.Println(err)
 	}
+
+	// stdout
+	stdout, err = os.Create(filepath.Join(path, "runstaq.stdout.log"))
+	if err != nil {
+		procfile.Error = err
+		shell.Println(err)
+		return procfile
+	}
+	procfile.Stdout = stdout
+
+	stderr, err = os.Create(filepath.Join(path, "runstaq.stderr.log"))
+	if err != nil {
+		procfile.Error = err
+		shell.Println(err)
+		return procfile
+	}
+	procfile.Stderr = stderr
 
 	return procfile
 }
@@ -62,17 +94,25 @@ func (procfile *Procfile) Status() string {
 }
 
 func (procfile *Procfile) Start() {
-	procfile.shell.Printf("Starting %s\n", procfile.Name)
+
+	procfile.shell.Printf("%s\n", procfile.Name)
+
 	for _, proc := range procfile.Procs {
-		proc.Start()
+		proc.Start(procfile)
 	}
-	procfile.shell.Printf("Done\n")
+	procfile.shell.Printf("\n")
 }
 
 func (procfile *Procfile) Stop() {
-	procfile.shell.Printf("Stopping %s\n", procfile.Name)
+
+	procfile.shell.Printf("%s\n", procfile.Name)
+
 	for _, proc := range procfile.Procs {
 		proc.Stop()
 	}
-	procfile.shell.Printf("Done\n")
+
+	// TODO Wrap this in a context with timeout and force kill them
+	procfile.wg.Wait() // Wait for them to all terminate
+
+	procfile.shell.Printf("\n")
 }

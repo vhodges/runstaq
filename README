@@ -39,9 +39,7 @@ Notes/Future Features
 
   - run a boot.sh script before starting (bring up infrastructure,
     prime caches, etc)
-  - Default stack to run (default.staq?)
   - Support for env files
+  - Default stack to run (default.staq?)?
     
-  
-
-  
+ 
