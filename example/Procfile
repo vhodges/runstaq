@@ -1,0 +1,3 @@
+web: sleep 1200                                # This one succeeds (Well for 20 minutes :)
+job: mrfribbledoesntexist                      # Missing command
+consumer: echo "The Consumer Failed to Start"  # Exits early
