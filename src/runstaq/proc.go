@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/abiosoft/ishell"
 )
@@ -27,7 +28,7 @@ func (proc *Proc) Status() string {
 	return "not running"
 }
 
-func (proc *Proc) Start(procfile *Procfile) {
+func (proc *Proc) Start(procfile *Procfile, delay time.Duration) {
 
 	if proc.Running {
 		proc.shell.Printf("  %s\n    already running\n", proc.Name)
@@ -52,6 +53,8 @@ func (proc *Proc) Start(procfile *Procfile) {
 		procfile.wg.Add(1)
 		go proc.waiter(&procfile.wg)
 	}
+
+	time.Sleep(delay)
 
 	proc.shell.Printf("  Done\n")
 }

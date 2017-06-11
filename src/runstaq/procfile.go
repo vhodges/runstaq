@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/abiosoft/ishell"
 )
@@ -93,12 +94,12 @@ func (procfile *Procfile) Status() string {
 	return ""
 }
 
-func (procfile *Procfile) Start() {
+func (procfile *Procfile) Start(delay int64) {
 
 	procfile.shell.Printf("%s\n", procfile.Name)
 
 	for _, proc := range procfile.Procs {
-		proc.Start(procfile)
+		proc.Start(procfile, time.Duration(delay)*time.Second)
 	}
 	procfile.shell.Printf("\n")
 }

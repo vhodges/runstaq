@@ -6,7 +6,9 @@ import (
 
 type Staq struct {
 	Procfiles []*Procfile
-	shell     *ishell.Shell
+	Delay     int64 // How to wait between process invocations
+
+	shell *ishell.Shell
 }
 
 func buildStaq(paths []string, shell *ishell.Shell) *Staq {

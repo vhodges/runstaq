@@ -12,12 +12,12 @@ func startCmd() *ishell.Cmd {
 		Func: func(c *ishell.Context) {
 			if len(c.Args) == 0 {
 				for _, procfile := range AppStaq.Procfiles {
-					procfile.Start()
+					procfile.Start(AppStaq.Delay)
 				}
 			} else {
 				procfile := AppStaq.module(c.Args[0])
 				if procfile != nil {
-					procfile.Start()
+					procfile.Start(5) // 5 seconds between processes
 				} else {
 					c.Printf("No such module: %s\n", c.Args[0])
 				}

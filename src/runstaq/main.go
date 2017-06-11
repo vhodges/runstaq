@@ -28,6 +28,8 @@ func main() {
 	}
 
 	staqFile := flag.String("stack", "", "filename of file containing list of folders in the stack, one per line.")
+	delay := flag.Int64("delay", 4, "How long to wait between process invocations in seconds (to avoid thrashing)")
+
 	flag.Parse()
 
 	var modules = make([]string, 0, 20)
@@ -54,6 +56,7 @@ func main() {
 	shell.AddCmd(stopCmd())
 
 	AppStaq = buildStaq(modules, shell)
+	AppStaq.Delay = *delay
 
 	// run shell
 	shell.Run()
