@@ -4,7 +4,7 @@ import (
 	"github.com/abiosoft/ishell"
 )
 
-var release = "2017.dev"
+var release = "2017.10"
 var build_sha string
 
 func versionCmd() *ishell.Cmd {
