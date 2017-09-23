@@ -3,7 +3,7 @@ Runstaq takes a list of directories and provides an interactive shell
 for starting and stopping program(s) within them (using foreman style
 Procfiles).
 
-Note:  It's not a devops tool per se, just a way to run a pieces.
+Note:  It's not a devops tool per se, just a way to run the pieces.
 
 Is you app comprised of a number of components spread across multiple
 folders/repos?  runstaq will help you get them running locally for
@@ -19,14 +19,14 @@ runstaq -stack runstaqfile (which is just a list of folders, one per line)
 
 This will drop you into a shell where you can:
 
-run [foldername]  # Run the stack or if foldername is specified just run
+start [foldername]  # Run the stack or if foldername is specified just run
                       that piece of the stack
 
-shutdown [foldername]  # Stop the stack or if foldername is specified just stop
+stop  [foldername]  # Stop the stack or if foldername is specified just stop
                       that piece of the stack
 
-list [foldername] # The status of the stack or if foldername is specified just 
-                      display the status for that piece of the stack
+list  [foldername] # The status of the stack or if foldername is specified just 
+                     display the status for that piece of the stack
 
 quit                # stop the stack and exit
 
@@ -40,6 +40,6 @@ Notes/Future Features
   - run a boot.sh script before starting (bring up infrastructure,
     prime caches, etc)
   - Support for env files
-  - Default stack to run (default.staq?)?
+  - Default stack to run (default.staq? Staqfile?)?
     
  
