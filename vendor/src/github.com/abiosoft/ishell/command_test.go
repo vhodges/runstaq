@@ -13,6 +13,7 @@ func newCmd(name string, help string) *ishell.Cmd {
 		Help: help,
 	}
 }
+
 func TestAddCommand(t *testing.T) {
 	cmd := newCmd("root", "")
 	assert.Equal(t, len(cmd.Children()), 0, "should be empty")
@@ -34,19 +35,44 @@ func TestFindCmd(t *testing.T) {
 	cmd.AddCmd(newCmd("child2", ""))
 	res, err := cmd.FindCmd([]string{"child1"})
 	if err != nil {
-		t.Error("finding should work")
+		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child1")
 
 	res, err = cmd.FindCmd([]string{"child2"})
 	if err != nil {
-		t.Error("finding should work")
+		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child2")
 
 	res, err = cmd.FindCmd([]string{"child3"})
 	if err == nil {
-		t.Error("should not find this child!")
+		t.Fatal("should not find this child!")
+	}
+	assert.Nil(t, res)
+}
+
+func TestFindAlias(t *testing.T) {
+	cmd := newCmd("root", "")
+	subcmd := newCmd("child1", "")
+	subcmd.Aliases = []string{"alias1", "alias2"}
+	cmd.AddCmd(subcmd)
+
+	res, err := cmd.FindCmd([]string{"alias1"})
+	if err != nil {
+		t.Fatal("finding alias should work")
+	}
+	assert.Equal(t, res.Name, "child1")
+
+	res, err = cmd.FindCmd([]string{"alias2"})
+	if err != nil {
+		t.Fatal("finding alias should work")
+	}
+	assert.Equal(t, res.Name, "child1")
+
+	res, err = cmd.FindCmd([]string{"alias3"})
+	if err == nil {
+		t.Fatal("should not find this child!")
 	}
 	assert.Nil(t, res)
 }

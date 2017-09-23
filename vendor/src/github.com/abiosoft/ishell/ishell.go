@@ -2,6 +2,7 @@
 package ishell
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
@@ -33,7 +35,7 @@ var (
 type Shell struct {
 	rootCmd           *Cmd
 	generic           func(*Context)
-	interrupt         func(int, *Context)
+	interrupt         func(*Context, int, string)
 	interruptCount    int
 	eof               func(*Context)
 	reader            *shellReader
@@ -68,7 +70,7 @@ func NewWithConfig(conf *readline.Config) *Shell {
 		rootCmd: &Cmd{},
 		reader: &shellReader{
 			scanner:     rl,
-			prompt:      defaultPrompt,
+			prompt:      rl.Config.Prompt,
 			multiPrompt: defaultMultiPrompt,
 			showPrompt:  true,
 			buf:         &bytes.Buffer{},
@@ -217,7 +219,7 @@ func handleInterrupt(s *Shell, line []string) error {
 	}
 	c := newContext(s, nil, line)
 	s.interruptCount++
-	s.interrupt(s.interruptCount, c)
+	s.interrupt(c, s.interruptCount, strings.Join(line, " "))
 	return c.err
 }
 
@@ -371,7 +373,7 @@ func (s *Shell) AutoHelp(enable bool) {
 // Interrupt adds a function to handle keyboard interrupt (Ctrl-c).
 // count is the number of consecutive times that Ctrl-c has been pressed.
 // i.e. any input apart from Ctrl-c resets count to 0.
-func (s *Shell) Interrupt(f func(count int, c *Context)) {
+func (s *Shell) Interrupt(f func(c *Context, count int, input string)) {
 	s.interrupt = f
 }
 
@@ -470,24 +472,61 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	if len(selected) > 0 {
 		cur = selected[len(selected)-1]
 	}
+
+	_, curRow, err := getPosition()
+	if err != nil {
+		return nil
+	}
+
+	_, maxRows, err := readline.GetSize(0)
+	if err != nil {
+		return nil
+	}
+
+	// allocate some space to be at the top of the screen
+	s.Printf("\033[%dS", curRow)
+
+	// move cursor to the top
+	// TODO it happens on every update, however, some trash appears in history without this line
+	s.Print("\033[0;0H")
+
+	offset := 0
+
 	update := func() {
-		s.Println()
-		s.Println(buildOptionsString(options, selected, cur))
-		s.Printf("\033[%dA", len(options)+1)
-		s.Print("\033[2K")
-		s.Print(text)
+		strs := buildOptionsStrings(options, selected, cur)
+		if len(strs) > maxRows-1 {
+			strs = strs[offset : maxRows+offset-1]
+		}
+		s.Print("\033[0;0H")
+		// clear from the cursor to the end of the screen
+		s.Print("\033[0J")
+		s.Println(text)
+		s.Print(strings.Join(strs, "\n"))
 	}
 	var lastKey rune
+	refresh := make(chan struct{}, 1)
 	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
 		lastKey = key
 		if key == -2 {
 			cur++
+			if cur >= maxRows+offset-1 {
+				offset++
+			}
 			if cur >= len(options) {
+				offset = 0
 				cur = 0
 			}
 		} else if key == -1 {
 			cur--
+			if cur < offset {
+				offset--
+			}
 			if cur < 0 {
+				if len(options) > maxRows-1 {
+					offset = len(options) - maxRows + 1
+				} else {
+					offset = 0
+				}
 				cur = len(options) - 1
 			}
 		} else if key == -3 {
@@ -495,31 +534,42 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 				selected = toggle(selected, cur)
 			}
 		}
-		update()
+		refresh <- struct{}{}
 		return
 	}
 	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
 	defer func() { s.reader.scanner.Config.Listener = nil }()
 
-	// delay a bit before printing
-	// TODO this works but there may be better way
+	stop := make(chan struct{})
+	defer func() {
+		stop <- struct{}{}
+		s.Println()
+	}()
+	t := time.NewTicker(time.Millisecond * 200)
+	defer t.Stop()
 	go func() {
-		time.Sleep(time.Millisecond * 200)
-		update()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-refresh:
+				update()
+			case <-t.C:
+				_, rows, _ := readline.GetSize(0)
+				if maxRows != rows {
+					maxRows = rows
+					update()
+				}
+			}
+		}
 	}()
 	s.ReadLine()
-	s.Println()
-	s.Println(buildOptionsString(options, selected, cur))
-	s.Println()
 
 	// only handles Ctrl-c for now
 	// this can be broaden later
 	switch lastKey {
 	// Ctrl-c
 	case 3:
-		if multiResults {
-			return []int{}
-		}
 		return []int{-1}
 	}
 	if multiResults {
@@ -528,33 +578,30 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	return []int{cur}
 }
 
-func buildOptionsString(options []string, selected []int, index int) string {
-	str := ""
+func buildOptionsStrings(options []string, selected []int, index int) []string {
+	var strs []string
 	symbol := " ❯"
 	if runtime.GOOS == "windows" {
 		symbol = " >"
 	}
 	for i, opt := range options {
-		mark := "  "
+		mark := "⬡ "
 		if selected == nil {
 			mark = " "
 		}
 		for _, s := range selected {
 			if s == i {
-				mark = "✓ "
+				mark = "⬢ "
 			}
 		}
 		if i == index {
 			cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-			str += cyan(symbol + mark + opt)
+			strs = append(strs, cyan(symbol+mark+opt))
 		} else {
-			str += "  " + mark + opt
-		}
-		if i < len(options)-1 {
-			str += "\n"
+			strs = append(strs, "  "+mark+opt)
 		}
 	}
-	return str
+	return strs
 }
 
 // IgnoreCase specifies whether commands should not be case sensitive.
@@ -593,4 +640,34 @@ func copyShellProgressBar(s *Shell) ProgressBar {
 	p.Final(sp.final)
 	p.Interval(sp.interval)
 	return p
+}
+
+func getPosition() (int, int, error) {
+	state, err := readline.MakeRaw(0)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer readline.Restore(0, state)
+	fmt.Printf("\033[6n")
+	var out string
+	reader := bufio.NewReader(os.Stdin)
+	if err != nil {
+		return 0, 0, err
+	}
+	for {
+		b, err := reader.ReadByte()
+		if err != nil || b == 'R' {
+			break
+		}
+		if unicode.IsPrint(rune(b)) {
+			out += string(b)
+		}
+	}
+	var row, col int
+	_, err = fmt.Sscanf(out, "[%d;%d", &row, &col)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return col, row, nil
 }
