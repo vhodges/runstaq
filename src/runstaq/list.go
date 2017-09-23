@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/abiosoft/ishell"
 )
 
@@ -11,27 +13,25 @@ func listCmd() *ishell.Cmd {
 		Completer: Completer,
 		Func: func(c *ishell.Context) {
 
-			if len(c.Args) == 0 {
-				for _, procfile := range AppStaq.Procfiles {
-					c.Printf("%-15s %s\n", procfile.Name, procfile.Status())
+			pattern := "*/*" // Default to all
 
-					for _, proc := range procfile.Procs {
-						c.Printf("%10s %s\n", proc.Name, proc.Status())
-					}
+			if len(c.Args) > 0 {
+				pattern = c.Args[0]
+			}
 
-					c.Printf("\n")
-					c.Printf("\n")
-				}
-			} else {
-				procfile := AppStaq.module(c.Args[0])
-				if procfile != nil {
-					c.Printf("%-15s %s\n", procfile.Name, procfile.Status())
-					for _, proc := range procfile.Procs {
-						c.Printf("%10s %s\n", proc.Name, proc.Status())
+			for _, procfile := range AppStaq.Procfiles {
+				for _, proc := range procfile.Procs {
+					if Glob(pattern, fmt.Sprintf("%s/%s", procfile.Name, proc.Name)) {
+						c.Printf("%s %s : %10s %s\n",
+							procfile.Name,
+							procfile.Status(),
+							proc.Name,
+							proc.Status())
 					}
-				} else {
-					c.Printf("No such module: %s\n", c.Args[0])
 				}
+
+				c.Printf("\n")
+				c.Printf("\n")
 			}
 		},
 	}

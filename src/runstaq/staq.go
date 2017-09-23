@@ -38,6 +38,15 @@ func (staq *Staq) module(name string) *Procfile {
 func (staq *Staq) shutdown() {
 	staq.shell.Printf("Shutting down...\n")
 	for _, procfile := range AppStaq.Procfiles {
-		procfile.Stop()
+		for _, proc := range procfile.Procs {
+
+			proc.Stop()
+
+			// TODO Figure out wating for procs to stop (before it was on the procfile as a set
+			// but since we're being more flexible now, so does the code for that.
+
+			// TODO Wrap this in a context with timeout and force kill them
+			//procfile.wg.Wait() // Wait for them to all terminate
+		}
 	}
 }

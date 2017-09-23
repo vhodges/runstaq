@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/abiosoft/ishell"
 )
 
 func startCmd() *ishell.Cmd {
 	return &ishell.Cmd{
-		Name:      "run",
-		Help:      "run [component] executing the staq components or a specific component",
+		Name:      "start",
+		Help:      "start [component] executing the staq components or a specific component",
 		Completer: Completer,
 		Func: func(c *ishell.Context) {
-			if len(c.Args) == 0 {
-				for _, procfile := range AppStaq.Procfiles {
-					procfile.Start(AppStaq.Delay)
-				}
-			} else {
-				procfile := AppStaq.module(c.Args[0])
-				if procfile != nil {
-					procfile.Start(5) // 5 seconds between processes
-				} else {
-					c.Printf("No such module: %s\n", c.Args[0])
+			pattern := "*/*" // Default to all
+
+			if len(c.Args) > 0 {
+				pattern = c.Args[0]
+			}
+
+			for _, procfile := range AppStaq.Procfiles {
+				for _, proc := range procfile.Procs {
+					if Glob(pattern, fmt.Sprintf("%s/%s", procfile.Name, proc.Name)) {
+						proc.Start(procfile, time.Duration(AppStaq.Delay)*time.Second)
+					}
 				}
 			}
 		},

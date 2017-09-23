@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/abiosoft/ishell"
 )
@@ -23,7 +21,6 @@ type Procfile struct {
 	Stderr io.Writer
 
 	shell *ishell.Shell
-	wg    sync.WaitGroup
 }
 
 /*
@@ -56,7 +53,7 @@ func NewProcfile(path string, shell *ishell.Shell) *Procfile {
 	for scanner.Scan() {
 		s := scanner.Text()
 		words := strings.SplitAfterN(s, ":", 2)
-		procfile.Procs = append(procfile.Procs, &Proc{Name: words[0], Command: words[1], shell: shell})
+		procfile.Procs = append(procfile.Procs, &Proc{Name: strings.TrimSuffix(words[0], ":"), Command: words[1], shell: shell})
 	}
 
 	err = scanner.Err()
@@ -92,28 +89,4 @@ func (procfile *Procfile) Status() string {
 	}
 
 	return ""
-}
-
-func (procfile *Procfile) Start(delay int64) {
-
-	procfile.shell.Printf("%s\n", procfile.Name)
-
-	for _, proc := range procfile.Procs {
-		proc.Start(procfile, time.Duration(delay)*time.Second)
-	}
-	procfile.shell.Printf("\n")
-}
-
-func (procfile *Procfile) Stop() {
-
-	procfile.shell.Printf("%s\n", procfile.Name)
-
-	for _, proc := range procfile.Procs {
-		proc.Stop()
-	}
-
-	// TODO Wrap this in a context with timeout and force kill them
-	procfile.wg.Wait() // Wait for them to all terminate
-
-	procfile.shell.Printf("\n")
 }

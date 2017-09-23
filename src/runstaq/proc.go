@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"os/exec"
-	"sync"
 	"time"
 
 	"github.com/abiosoft/ishell"
@@ -51,8 +50,6 @@ func (proc *Proc) Start(procfile *Procfile, delay time.Duration) {
 		proc.Running = false
 	} else {
 		proc.Running = true
-		procfile.wg.Add(1)
-		go proc.waiter(&procfile.wg)
 	}
 
 	time.Sleep(delay)
@@ -77,8 +74,7 @@ func (proc *Proc) Stop() {
 	proc.Running = false
 }
 
-func (proc *Proc) waiter(wg *sync.WaitGroup) {
+func (proc *Proc) Wait() {
 	proc.cmd.Wait()
 	proc.Running = false
-	wg.Done()
 }
