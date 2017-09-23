@@ -50,6 +50,7 @@ func (proc *Proc) Start(procfile *Procfile, delay time.Duration) {
 		proc.Running = false
 	} else {
 		proc.Running = true
+		go proc.Wait()
 	}
 
 	time.Sleep(delay)
