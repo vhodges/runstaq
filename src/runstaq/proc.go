@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/abiosoft/ishell"
+	"github.com/fatih/color"
 )
 
 type Proc struct {
@@ -22,10 +23,10 @@ type Proc struct {
 func (proc *Proc) Status() string {
 
 	if proc.Running {
-		return "running"
+		return color.GreenString("running")
 	}
 
-	return "not running"
+	return color.MagentaString("not running")
 }
 
 func (proc *Proc) Start(procfile *Procfile, delay time.Duration) {
