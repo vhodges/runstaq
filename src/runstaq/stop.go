@@ -9,6 +9,7 @@ import (
 func stopCmd() *ishell.Cmd {
 	return &ishell.Cmd{
 		Name:      "stop",
+		Aliases:   []string{"shutdown", "kill", "halt", "end"},
 		Help:      "stop [component] stops executing of the staq components or a specific component",
 		Completer: Completer,
 		Func: func(c *ishell.Context) {

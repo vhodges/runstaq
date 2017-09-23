@@ -10,6 +10,7 @@ import (
 func startCmd() *ishell.Cmd {
 	return &ishell.Cmd{
 		Name:      "start",
+		Aliases:   []string{"run", "begin"},
 		Help:      "start [component] executing the staq components or a specific component",
 		Completer: Completer,
 		Func: func(c *ishell.Context) {

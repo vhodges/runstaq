@@ -9,6 +9,7 @@ import (
 func listCmd() *ishell.Cmd {
 	return &ishell.Cmd{
 		Name:      "list",
+		Aliases:   []string{"ls", "dir"},
 		Help:      "List staq components and their statuses",
 		Completer: Completer,
 		Func: func(c *ishell.Context) {
