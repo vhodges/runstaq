@@ -58,5 +58,5 @@ See: https://github.com/crigler/dtach
   - dtach -n /tmp/stacksession runstaq -stack staqfile  # run in background
   - echo -ne 'start\n' | dtach -p /tmp/stacksession     # send start command to runstaq
   - ... time passes ...
-  - dtach -a /tmp/stacksession                          # later, attach to check status, start, stop, etc
+  - dtach -a /tmp/stacksession                          # to check status, start, stop, etc
 
