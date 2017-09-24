@@ -19,21 +19,28 @@ runstaq -stack runstaqfile (which is just a list of folders, one per line)
 
 This will drop you into a shell where you can:
 
-start [foldername]  # Run the stack or if foldername is specified just run
-                      that piece of the stack
+start [glob pattern]  # Run the stack or if foldername is specified just run
+                      that piece of the stack. Aliases: run, begin
 
-stop  [foldername]  # Stop the stack or if foldername is specified just stop
-                      that piece of the stack
+stop  [glob pattern]  # Stop the stack or if foldername is specified just stop
+                      that piece of the stack. Aliases: shutdown, kill, halt, end
 
-list  [foldername] # The status of the stack or if foldername is specified just 
-                     display the status for that piece of the stack
+list  [glob pattern] # The status of the stack or if foldername is specified just 
+                     display the status for that piece of the stack. Aliases: ls, dir
 
-quit                # stop the stack and exit
+quit                 # stop the stack and exit
 
-help                # Print this list
+help                 # Print this list
 
-version             # Print version/build info for runstaq
+version              # Print version/build info for runstaq
 
+Where glob pattern is a wildcard pattern in the style of folder/procname to operate
+on (defaults to */*) eg:
+
+- */*               # Everything
+- */web             # All web processes named web in all folders
+- authenticator/*   # All processes in the authenticator folder
+- etc
 
 Notes/Future Features
 
@@ -41,5 +48,15 @@ Notes/Future Features
     prime caches, etc)
   - Support for env files
   - Default stack to run (default.staq? Staqfile?)?
-    
- 
+  - restart command
+  - reload command (stack/procfiles)
+  
+Example of using runstaq with dtach (ie for automation)
+
+See: https://github.com/crigler/dtach
+
+  - dtach -n /tmp/stacksession runstaq -stack staqfile  # run in background
+  - echo -ne 'start\n' | dtach -p /tmp/stacksession     # send start command to runstaq
+  - ... time passes ...
+  - dtach -a /tmp/stacksession                          # later, attach to check status, start, stop, etc
+
